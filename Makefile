@@ -1,0 +1,41 @@
+all: ./build/intro-loop.p8.png
+clean: clean-build
+
+./build/%.p8.png: ./build/%.p8
+	-pico8 $< -export $@
+
+./build/intro-loop.p8: ./scripts/encode-loop.mjs ./templates/intro-loop.p8 ./data/frames
+	./scripts/encode-loop.mjs --template ./templates/intro-loop.p8 \
+		--endFrame 189 --loopStartFrame 142 --frameStep 2 \
+		--output ./build/intro-loop.p8
+
+./data/frames: ./data/image_sequence
+	mkdir -p ./data/frames-tmp
+	$(MAKE) ./data/frames-tmp/ALL
+	mv ./data/frames-tmp ./data/frames
+
+./data/frames-tmp/ALL: $(patsubst ./data/image_sequence/%, ./data/frames-tmp/%.bin, $(wildcard ./data/image_sequence/*))
+
+./data/frames-tmp/%.bin: ./data/image_sequence/%
+	magick $< -resize 128x128^ -gravity center -background black -extent 128x128 -depth 1 GRAY:$@
+
+./data/image_sequence ./data/bad_apple.wav: ./data/bad_apple_is.7z
+	mkdir -p ./data/bad_apple_is.7z.d
+	7z x -y -o./data/bad_apple_is.7z.d ./data/bad_apple_is.7z
+	touch ./data/bad_apple_is.7z.d/*
+	mv ./data/bad_apple_is.7z.d/* ./data && rm -r ./data/bad_apple_is.7z.d
+
+./data/bad_apple_is.7z: ./data/bad_apple_is.7z_archive.torrent
+	mkdir -p ./data/aria2
+	cd ./data/aria2 && aria2c ../bad_apple_is.7z_archive.torrent --seed-time=0
+	mv ./data/aria2/bad_apple_is.7z/bad_apple_is.7z ./data/bad_apple_is.7z
+	rm -rf ./data/aria2/bad_apple_is.7z
+
+./data/bad_apple_is.7z_archive.torrent:
+	cd ./data && wget https://archive.org/download/bad_apple_is.7z/bad_apple_is.7z_archive.torrent
+
+clean-build:
+	rm -rf ./build/*
+
+clean-data:
+	rm -rf ./data/*
