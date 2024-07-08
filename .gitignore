@@ -1,5 +1,2 @@
 /data/*
-!/data/**/.gitkeep
-
 /build/*
-!/build/**/.gitkeep

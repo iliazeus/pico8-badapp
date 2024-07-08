@@ -43,31 +43,26 @@ end
 
 function draw_frame()
 	local c = 7
+
 	function rec(x0,y0,n,d)
+		local l = false
 		if d >= maxdepth then
-			if next_bit() == 0 then
-				c = 0
-			else
-				c = 7
-			end
-			rectfill(x0,y0,x0+n-1,y0+n-1,c)
-			--debug wireframe
-			--if n >= 4 then
-			--	rect(x0,y0,x0+n-1,y0+n-1,11)
-			--end
+			l = true
+			c = next_bit()==0 and 0 or 7
 		elseif next_bit() == 0 then
-			rectfill(x0,y0,x0+n-1,y0+n-1,c)
-			--debug wireframe
-			--if n >= 4 then
-			--	rect(x0,y0,x0+n-1,y0+n-1,11)
-			--end
+			l = true
 		elseif next_bit() == 0 then
+			l = true
 			if c==7 then c=0 else c=7 end
+		else
+			l = false
+		end
+
+		if l then
 			rectfill(x0,y0,x0+n-1,y0+n-1,c)
-			--debug wireframe
-			--if n >= 4 then
-			--	rect(x0,y0,x0+n-1,y0+n-1,11)
-			--end
+			if debug and n>=4 then
+				rect(x0,y0,x0+n-1,y0+n-1,11)
+			end
 		else
 			rec(x0,y0,n/2,d+1)
 			rec(x0+n/2,y0,n/2,d+1)
@@ -81,8 +76,9 @@ function draw_frame()
 	flush5()
 end
 -->8
-maxdepth = 7
-framestep = 35
+debug = false
+maxdepth = 6
+framestep = 20
 timer = 0
 
 function _init()

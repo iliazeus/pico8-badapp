@@ -12,13 +12,13 @@ run-%: ./build/%.p8
 
 ./build/datacart-qtree-b32ent.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
 	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 1 --endFrame 3181 --frameStep 35 --maxDepth 7 \
+		--startFrame 1 --endFrame 3181 --frameStep 20 --maxDepth 6 \
 		--nextcart ./build/datacart-qtree-b32ent-1.p8 \
 		--output ./build/datacart-qtree-b32ent.p8
 
 ./build/datacart-qtree-b32ent-1.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
 	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 3211 --endFrame 6562 --frameStep 35 --maxDepth 7 \
+		--startFrame 3211 --endFrame 6562 --frameStep 20 --maxDepth 6 \
 		--nextcart ./build/playcart-qtree-b32ent.p8 \
 		--output ./build/datacart-qtree-b32ent-1.p8
 
