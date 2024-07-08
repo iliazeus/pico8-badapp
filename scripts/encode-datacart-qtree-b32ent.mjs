@@ -104,7 +104,11 @@ async function encodeFrame(inPath, maxDepth) {
 
   let cc = 1;
   function serialize(tree, depth = 0) {
-    if (!tree.c || depth >= maxDepth) {
+    if (depth >= maxDepth) {
+      let c = Math.round(tree.v);
+      pushBit(c);
+      cc = c;
+    } else if (!tree.c) {
       let c = Math.round(tree.v);
       if (c === cc) {
         pushBit(0);
