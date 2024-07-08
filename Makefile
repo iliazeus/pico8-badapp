@@ -1,13 +1,21 @@
-all: ./build/intro-loop.p8.png
+all: ./build/intro-loop-qtree-b32.p8.png
 clean: clean-build
+
+run-%: ./build/%.p8
+	{ pico8 -run $< & }; disown
 
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
 
-./build/intro-loop.p8: ./scripts/encode-loop.mjs ./templates/intro-loop.p8 ./data/frames
-	./scripts/encode-loop.mjs --template ./templates/intro-loop.p8 \
+./build/intro-loop-qtree-b32ent.p8: ./scripts/encode-loop-qtree-b32ent.mjs ./templates/intro-loop-qtree-b32ent.p8 ./data/frames
+	./scripts/encode-loop-qtree-b32ent.mjs --template ./templates/intro-loop-qtree-b32ent.p8 \
 		--endFrame 189 --loopStartFrame 142 --frameStep 2 \
-		--output ./build/intro-loop.p8
+		--output ./build/intro-loop-qtree-b32ent.p8
+
+./build/intro-loop-qtree-b32.p8: ./scripts/encode-loop-qtree-b32.mjs ./templates/intro-loop-qtree-b32.p8 ./data/frames
+	./scripts/encode-loop-qtree-b32.mjs --template ./templates/intro-loop-qtree-b32.p8 \
+		--endFrame 189 --loopStartFrame 142 --frameStep 2 \
+		--output ./build/intro-loop-qtree-b32.p8
 
 ./data/frames: ./data/image_sequence
 	mkdir -p ./data/frames-tmp

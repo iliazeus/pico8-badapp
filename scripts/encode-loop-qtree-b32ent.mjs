@@ -20,9 +20,9 @@ const maxDepth = Number(args.values.maxDepth);
 const startFrame = Number(args.values.startFrame);
 const endFrame = Number(args.values.endFrame);
 const frameStep = Number(args.values.frameStep);
-const loopStartFrame = Math.floor(
-  Number(args.values.loopStartFrame) / frameStep
-);
+const loopStartFrame =
+  Math.floor((Number(args.values.loopStartFrame) - startFrame) / frameStep) ||
+  1;
 
 let template = await fs.open(args.values.template, "r");
 let output = await fs.open(args.values.output, "w");
@@ -108,11 +108,19 @@ async function encodeFrame(inPath, maxDepth) {
     }
   }
 
+  let cc = 1;
   function serialize(tree, depth = 0) {
     if (!tree.c || depth >= maxDepth) {
-      pushBit(0);
-      pushBit(Math.round(tree.v));
+      let c = Math.round(tree.v);
+      if (c === cc) {
+        pushBit(0);
+      } else {
+        pushBit(1);
+        pushBit(0);
+        cc = c;
+      }
     } else {
+      pushBit(1);
       pushBit(1);
       for (let c of tree.c) serialize(c, depth + 1);
     }
