@@ -9,12 +9,12 @@ run-%: ./build/%.p8
 
 ./build/intro-loop-qtree-b32ent.p8: ./scripts/encode-loop-qtree-b32ent.mjs ./templates/intro-loop-qtree-b32ent.p8 ./data/frames
 	./scripts/encode-loop-qtree-b32ent.mjs --template ./templates/intro-loop-qtree-b32ent.p8 \
-		--endFrame 189 --loopStartFrame 142 --frameStep 2 \
+		--endFrame 189 --loopStartFrame 143 --frameStep 2 \
 		--output ./build/intro-loop-qtree-b32ent.p8
 
 ./build/intro-loop-qtree-b32.p8: ./scripts/encode-loop-qtree-b32.mjs ./templates/intro-loop-qtree-b32.p8 ./data/frames
 	./scripts/encode-loop-qtree-b32.mjs --template ./templates/intro-loop-qtree-b32.p8 \
-		--endFrame 189 --loopStartFrame 142 --frameStep 2 \
+		--endFrame 189 --loopStartFrame 143 --frameStep 2 \
 		--output ./build/intro-loop-qtree-b32.p8
 
 ./data/frames: ./data/image_sequence
