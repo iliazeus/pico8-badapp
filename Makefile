@@ -1,4 +1,4 @@
-all: ./build/intro-loop-qtree-b32.p8.png
+all: ./build/intro-loop-qtree-b32.p8.png ./build/intro-loop-qtree-b32ent.p8.png ./build/intro-loop-qtree-b27.p8.png
 clean: clean-build
 
 run-%: ./build/%.p8
@@ -6,6 +6,36 @@ run-%: ./build/%.p8
 
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
+
+./build/playcart-qtree-b32ent.p8: ./build/datacart-qtree-b32ent.p8 ./build/datacart-qtree-b32ent-1.p8 ./templates/playcart-qtree-b32ent.p8
+	cp ./templates/playcart-qtree-b32ent.p8 ./build
+
+./build/datacart-qtree-b32ent.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
+	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
+		--startFrame 1 --endFrame 3181 --frameStep 60 --maxDepth 7 \
+		--nextcart ./build/datacart-qtree-b32ent-1.p8 \
+		--output ./build/datacart-qtree-b32ent.p8
+
+./build/datacart-qtree-b32ent-1.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
+	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
+		--startFrame 3211 --endFrame 6562 --frameStep 60 --maxDepth 7 \
+		--nextcart ./build/playcart-qtree-b32ent.p8 \
+		--output ./build/datacart-qtree-b32ent-1.p8
+
+# ./build/playcart-qtree-b32ent.p8: ./build/datacart-qtree-b32ent.p8 ./build/datacart-qtree-b32ent-1.p8 ./templates/playcart-qtree-b32ent.p8
+# 	cp ./templates/playcart-qtree-b32ent.p8 ./build
+
+# ./build/datacart-qtree-b32ent.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
+# 	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
+# 		--startFrame 1 --endFrame 3181 --frameStep 30 --maxDepth 6 \
+# 		--nextcart ./build/datacart-qtree-b32ent-1.p8 \
+# 		--output ./build/datacart-qtree-b32ent.p8
+
+# ./build/datacart-qtree-b32ent-1.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
+# 	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
+# 		--startFrame 3211 --endFrame 6562 --frameStep 30 --maxDepth 6 \
+# 		--nextcart ./build/playcart-qtree-b32ent.p8 \
+# 		--output ./build/datacart-qtree-b32ent-1.p8
 
 ./build/intro-loop-qtree-b27.p8: ./scripts/encode-loop-qtree-b27.mjs ./templates/intro-loop-qtree-b27.p8 ./data/frames
 	./scripts/encode-loop-qtree-b27.mjs --template ./templates/intro-loop-qtree-b27.p8 \
@@ -30,7 +60,7 @@ run-%: ./build/%.p8
 ./data/frames-tmp/ALL: $(patsubst ./data/image_sequence/%, ./data/frames-tmp/%.bin, $(wildcard ./data/image_sequence/*))
 
 ./data/frames-tmp/%.bin: ./data/image_sequence/%
-	magick $< -resize 128x128^ -gravity center -background black -extent 128x128 -depth 1 GRAY:$@
+	magick $< -resize 128x128 -gravity center -background black -extent 128x128 -depth 1 GRAY:$@
 
 ./data/image_sequence ./data/bad_apple.wav: ./data/bad_apple_is.7z
 	mkdir -p ./data/bad_apple_is.7z.d
