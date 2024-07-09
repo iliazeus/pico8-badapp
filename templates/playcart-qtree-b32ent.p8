@@ -35,12 +35,6 @@ function next_bit()
 	return b
 end
 
-function flush5()
-	while k5 != 0 do
-		next_bit()
-	end
-end
-
 function draw_frame()
 	local c = 7
 
@@ -73,7 +67,6 @@ function draw_frame()
 	
 	cls()
 	rec(0,0,128,0)
-	flush5()
 end
 -->8
 debug = false
