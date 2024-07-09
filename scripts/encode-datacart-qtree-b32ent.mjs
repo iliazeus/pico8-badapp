@@ -12,7 +12,6 @@ const args = parseArgs({
     startFrame: { type: "string" },
     endFrame: { type: "string" },
     frameStep: { type: "string" },
-    nextcart: { type: "string" },
   },
 });
 
@@ -20,7 +19,6 @@ const maxDepth = Number(args.values.maxDepth);
 const startFrame = Number(args.values.startFrame);
 const endFrame = Number(args.values.endFrame);
 const frameStep = Number(args.values.frameStep);
-const nextcart = args.values.nextcart;
 
 let template = await fs.open(args.values.template, "r");
 let output = await fs.open(args.values.output, "w");
@@ -64,7 +62,6 @@ try {
       continue;
     }
 
-    await output.write(`nextcart = "${nextcart}"\n`);
     await output.write('data = "');
 
     try {

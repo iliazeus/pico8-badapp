@@ -7,20 +7,24 @@ run-%: ./build/%.p8
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
 
-./build/playcart-qtree-b32ent.p8: ./build/datacart-qtree-b32ent.p8 ./build/datacart-qtree-b32ent-1.p8 ./templates/playcart-qtree-b32ent.p8
+./build/playcart-qtree-b32ent.p8: ./templates/playcart-qtree-b32ent.p8 \
+    ./build/datacart-qtree-b32ent-1.p8 ./build/datacart-qtree-b32ent-2.p8 ./build/datacart-qtree-b32ent-3.p8
 	cp ./templates/playcart-qtree-b32ent.p8 ./build
-
-./build/datacart-qtree-b32ent.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
-	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 1 --endFrame 3181 --frameStep 20 --maxDepth 6 \
-		--nextcart ./build/datacart-qtree-b32ent-1.p8 \
-		--output ./build/datacart-qtree-b32ent.p8
 
 ./build/datacart-qtree-b32ent-1.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
 	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 3211 --endFrame 6562 --frameStep 20 --maxDepth 6 \
-		--nextcart ./build/playcart-qtree-b32ent.p8 \
+		--startFrame 1 --endFrame 2561 --frameStep 20 --maxDepth 6 \
 		--output ./build/datacart-qtree-b32ent-1.p8
+
+./build/datacart-qtree-b32ent-2.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
+	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
+		--startFrame 2581 --endFrame 4561 --frameStep 20 --maxDepth 6 \
+		--output ./build/datacart-qtree-b32ent-2.p8
+
+./build/datacart-qtree-b32ent-3.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
+	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
+		--startFrame 4581 --endFrame 6562 --frameStep 20 --maxDepth 6 \
+		--output ./build/datacart-qtree-b32ent-3.p8
 
 ./build/intro-loop-qtree-b27.p8: ./scripts/encode-loop-qtree-b27.mjs ./templates/intro-loop-qtree-b27.p8 ./data/frames
 	./scripts/encode-loop-qtree-b27.mjs --template ./templates/intro-loop-qtree-b27.p8 \

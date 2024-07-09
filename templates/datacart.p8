@@ -5,17 +5,10 @@ __lua__
 
 --[[data]]--
 
-v = 0
-k = 0
-
-p = stat(6)
-if p != "" then
-	p = tonum(p)
-	v = peek(p)
-	k = peek(p+1)
-else
-	p = 0x8000
-end
+v = peek(0x8000)
+k = peek(0x8001)
+p = peek2(0x8002)
+if (p == 0) p = 0x8010
 
 for i = 1, #data do
 	local c = ord(data[i])
@@ -35,7 +28,8 @@ for i = 1, #data do
 end
 
 v = v << (8 - k)
-poke(p, v)
-poke(p+1, k)
+poke(0x8000, v)
+poke(0x8001, k)
+poke2(0x8002, p)
 
-load(nextcart, nil, tostr(p))
+extcmd("breadcrumb")
