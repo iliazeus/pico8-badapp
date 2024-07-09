@@ -106,7 +106,7 @@ function draw_frame()
 	end
 	
 	cls()
-	rec(0,0,128,0)
+	rec(0,-16,128,0)
 end
 -->8
 debug = false

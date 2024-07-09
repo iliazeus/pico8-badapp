@@ -1,19 +1,30 @@
-all: ./build/seq/play.p8.png ./build/seq/1.p8.png ./build/seq/2.p8.png
+all: ./build/6-13/play.p8 ./build/6-14/play.p8 ./build/6-15/play.p8
 clean: clean-build
 
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
 
-./build/seq/play.p8 ./build/seq/1.p8 ./build/seq/2.p8: \
+./build/6-14/play.p8 ./build/6-14/1.p8 ./build/6-14/2.p8 ./build/6-14/3.p8: \
     ./scripts/encode-seq-qtree-b32ent.mjs \
     ./templates/datacart.p8 ./templates/playcart-qtree-b32ent.p8 \
     ./data/frames
-	mkdir -p ./build/seq
+	mkdir -p ./build/6-14
 	./scripts/encode-seq-qtree-b32ent.mjs \
 		--dataTemplate ./templates/datacart.p8 --playTemplate ./templates/playcart-qtree-b32ent.p8 \
-		--outputDir ./build/seq \
-		--maxDepth 6 --frameStep 16 \
-		--startFrame 1 --split 2150 --split 4380 --endFrame 6562
+		--outputDir ./build/6-14 \
+		--maxDepth 6 --frameStep 14 \
+		--startFrame 1 --split 1500 --split 3000 --split 4600 --endFrame 6562
+
+./build/6-15/play.p8 ./build/6-15/1.p8 ./build/6-15/2.p8 ./build/6-15/3.p8: \
+    ./scripts/encode-seq-qtree-b32ent.mjs \
+    ./templates/datacart.p8 ./templates/playcart-qtree-b32ent.p8 \
+    ./data/frames
+	mkdir -p ./build/6-15
+	./scripts/encode-seq-qtree-b32ent.mjs \
+		--dataTemplate ./templates/datacart.p8 --playTemplate ./templates/playcart-qtree-b32ent.p8 \
+		--outputDir ./build/6-15 \
+		--maxDepth 6 --frameStep 15 \
+		--startFrame 1 --split 1600 --split 3200 --split 4800 --endFrame 6562
 
 ./build/intro-loop-qtree-b27.p8: ./scripts/encode-loop-qtree-b27.mjs ./templates/intro-loop-qtree-b27.p8 ./data/frames
 	./scripts/encode-loop-qtree-b27.mjs --template ./templates/intro-loop-qtree-b27.p8 \
@@ -38,7 +49,9 @@ clean: clean-build
 ./data/frames-tmp/ALL: $(patsubst ./data/image_sequence/%, ./data/frames-tmp/%.bin, $(wildcard ./data/image_sequence/*))
 
 ./data/frames-tmp/%.bin: ./data/image_sequence/%
-	magick $< -resize 128x128 -gravity center -background black -extent 128x128 -depth 1 GRAY:$@
+	magick $< -resize 128x128 -gravity south -background black -extent 128x128 -depth 1 GRAY:$@
+#	magick $< -resize 128x128 -gravity center -background black -extent 128x128 -depth 1 GRAY:$@
+#	magick $< -resize 128x128^ -gravity center -background black -extent 128x128 -depth 1 GRAY:$@
 
 ./data/image_sequence ./data/bad_apple.wav: ./data/bad_apple_is.7z
 	mkdir -p ./data/bad_apple_is.7z.d
