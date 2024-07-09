@@ -4,20 +4,12 @@ __lua__
 --bad apple, but it's 1.5 fps
 --in 64x64 resolution
 
-datacarts = {
---[[
---64x64; maxdepth=6; framestep=20
-	"#iliazeus_badapple_but-6",
-	"#iliazeus_badapple_but-7",
-	"#iliazeus_badapple_but-8",
-]]--
---dev builds
-	"./build/datacart-qtree-b32ent-1.p8",
-	"./build/datacart-qtree-b32ent-2.p8",
-	"./build/datacart-qtree-b32ent-3.p8",
-}
+--[[data]]--
 
 stage = peek(0x8004)
+if stage == 0 then
+	poke2(0x8002, 0x8010)
+end
 for i = 1, #datacarts do
 	if stage == i-1 then
 		poke(0x8004, i)
@@ -25,15 +17,52 @@ for i = 1, #datacarts do
 	end
 end
 
-p = 0x8010
-n = peek2(0x8002)
-k = 7
-k5 = 0
+v = peek(0x8000)
+k = peek(0x8001)
+p = peek2(0x8002)
 
-printh(n - p)
+for i = 1, #data do
+	local c = ord(data[i])
+	if 97<=c and c<=122 then
+		c -= 97
+	elseif 50<=c and c<=55 then
+		c -= 24
+	end
+	v = (v << 5) | c
+	k += 5
+	if k >= 8 then
+		k -= 8
+		poke(p, (v&(0xff<<k))>>k)
+		v = v & ~(0xff<<k)
+		p += 1
+	end
+end
+
+if outp > 0 then
+	v = (v << outp) | outc
+	k += outp
+	if k >= 8 then
+		k -= 8
+		poke(p, (v&(0xff<<k))>>k)
+		v = v & ~(0xff<<k)
+		p += 1
+	end
+end
+
+if k > 0 then
+	v = v << (8 - k)
+	poke(p, v)
+	p += 1
+end
+
+printh(tostr(p, true))
+
+n = p
+p = 0x8010
+k = 7
 
 function next_bit()
-	if p >= n then
+	if p == n then
 		return 0
 	end
 	local b = peek(p)
@@ -43,8 +72,6 @@ function next_bit()
 	else
 		k = 7; p += 1
 	end
-	k5 += 1
-	if (k5 == 5) k5 = 0
 	return b
 end
 
@@ -83,8 +110,6 @@ function draw_frame()
 end
 -->8
 debug = false
-maxdepth = 6
-framestep = 20
 timer = 0
 
 function _init()
@@ -92,8 +117,13 @@ function _init()
 end
 
 function _update()
-	if (p >= n) return
-	if btnp(4) or btnp(5) then
+	if 0x5e00<=p and p<=0x7fff then
+		return
+	end
+	if btnp(4) then
+		printh(tostr(p, true))
+	end
+	if btnp(5) then
 		debug = not debug
 	end
 	if (not btn(0)) timer += 1

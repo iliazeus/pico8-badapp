@@ -8,7 +8,6 @@ __lua__
 v = peek(0x8000)
 k = peek(0x8001)
 p = peek2(0x8002)
-if (p == 0) p = 0x8010
 
 for i = 1, #data do
 	local c = ord(data[i])
@@ -27,9 +26,21 @@ for i = 1, #data do
 	end
 end
 
-v = v << (8 - k)
+if outp > 0 then
+	v = (v << outp) | outc
+	k += outp
+	if k >= 8 then
+		k -= 8
+		poke(p, (v&(0xff<<k))>>k)
+		v = v & ~(0xff<<k)
+		p += 1
+	end
+end
+
 poke(0x8000, v)
 poke(0x8001, k)
 poke2(0x8002, p)
+
+printh(tostr(p, true))
 
 extcmd("breadcrumb")

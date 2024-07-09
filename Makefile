@@ -1,30 +1,19 @@
-all: ./build/intro-loop-qtree-b32.p8.png ./build/intro-loop-qtree-b32ent.p8.png ./build/intro-loop-qtree-b27.p8.png
+all: ./build/seq/play.p8.png ./build/seq/1.p8.png ./build/seq/2.p8.png
 clean: clean-build
-
-run-%: ./build/%.p8
-	{ pico8 -root_path . -run $< & }; disown
 
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
 
-./build/playcart-qtree-b32ent.p8: ./templates/playcart-qtree-b32ent.p8 \
-    ./build/datacart-qtree-b32ent-1.p8 ./build/datacart-qtree-b32ent-2.p8 ./build/datacart-qtree-b32ent-3.p8
-	cp ./templates/playcart-qtree-b32ent.p8 ./build
-
-./build/datacart-qtree-b32ent-1.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
-	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 1 --endFrame 2561 --frameStep 20 --maxDepth 6 \
-		--output ./build/datacart-qtree-b32ent-1.p8
-
-./build/datacart-qtree-b32ent-2.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
-	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 2581 --endFrame 4561 --frameStep 20 --maxDepth 6 \
-		--output ./build/datacart-qtree-b32ent-2.p8
-
-./build/datacart-qtree-b32ent-3.p8: ./scripts/encode-datacart-qtree-b32ent.mjs ./templates/datacart.p8 ./data/frames
-	./scripts/encode-datacart-qtree-b32ent.mjs --template ./templates/datacart.p8 \
-		--startFrame 4581 --endFrame 6562 --frameStep 20 --maxDepth 6 \
-		--output ./build/datacart-qtree-b32ent-3.p8
+./build/seq/play.p8 ./build/seq/1.p8 ./build/seq/2.p8: \
+    ./scripts/encode-seq-qtree-b32ent.mjs \
+    ./templates/datacart.p8 ./templates/playcart-qtree-b32ent.p8 \
+    ./data/frames
+	mkdir -p ./build/seq
+	./scripts/encode-seq-qtree-b32ent.mjs \
+		--dataTemplate ./templates/datacart.p8 --playTemplate ./templates/playcart-qtree-b32ent.p8 \
+		--outputDir ./build/seq \
+		--maxDepth 6 --frameStep 16 \
+		--startFrame 1 --split 2150 --split 4380 --endFrame 6562
 
 ./build/intro-loop-qtree-b27.p8: ./scripts/encode-loop-qtree-b27.mjs ./templates/intro-loop-qtree-b27.p8 ./data/frames
 	./scripts/encode-loop-qtree-b27.mjs --template ./templates/intro-loop-qtree-b27.p8 \
