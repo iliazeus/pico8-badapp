@@ -2,7 +2,7 @@ all: ./build/intro-loop-qtree-b32.p8.png ./build/intro-loop-qtree-b32ent.p8.png 
 clean: clean-build
 
 run-%: ./build/%.p8
-	{ pico8 -run $< & }; disown
+	{ pico8 -root_path . -run $< & }; disown
 
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
