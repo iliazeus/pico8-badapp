@@ -1,8 +1,19 @@
-all: ./build/6-13/play.p8 ./build/6-14/play.p8 ./build/6-15/play.p8
+all: ./build/6-14mtf/play.p8 ./build/6-14/play.p8 ./build/6-15/play.p8
 clean: clean-build
 
 ./build/%.p8.png: ./build/%.p8
 	-pico8 $< -export $@
+
+./build/6-14mtf/play.p8 ./build/6-14mtf/1.p8 ./build/6-14mtf/2.p8 ./build/6-14mtf/3.p8: \
+    ./scripts/encode-seq-qtree-b32mtf.mjs \
+    ./templates/datacart.p8 ./templates/playcart-qtree-b32mtf.p8 \
+    ./data/frames
+	mkdir -p ./build/6-14mtf
+	./scripts/encode-seq-qtree-b32mtf.mjs \
+		--dataTemplate ./templates/datacart.p8 --playTemplate ./templates/playcart-qtree-b32mtf.p8 \
+		--outputDir ./build/6-14mtf \
+		--maxDepth 6 --frameStep 14 \
+		--startFrame 1 --split 1500 --split 3000 --split 4600 --endFrame 6562
 
 ./build/6-14/play.p8 ./build/6-14/1.p8 ./build/6-14/2.p8 ./build/6-14/3.p8: \
     ./scripts/encode-seq-qtree-b32ent.mjs \
