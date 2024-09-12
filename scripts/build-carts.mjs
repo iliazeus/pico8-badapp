@@ -1,73 +1,183 @@
-pico-8 cartridge // http://www.pico-8.com
+#!/usr/bin/env node
+
+import * as fs from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { stdin } from "node:process";
+import { format, parseArgs } from "node:util";
+import assert from "node:assert";
+import { join } from "node:path";
+
+const args = parseArgs({
+  strict: true,
+  options: {
+    input: { type: "string" },
+    outdir: { type: "string" },
+    pageSize: { type: "string", default: "13310" },
+  },
+});
+
+const input = args.values.input ? createReadStream(args.values.input) : stdin;
+const outdir = args.values.outdir;
+const pageSize = Number(args.values.pageSize);
+
+assert(outdir);
+
+let data = [];
+for await (let chunk of input) data.push(chunk);
+data = Buffer.concat(data);
+
+let hist = new Int32Array(256);
+for (let byte of data) hist[byte]++;
+
+let sep = 0x00;
+let sepFreq = 0;
+for (let byte = 0; byte < 256; byte++) {
+  if (hist[byte] > sepFreq) {
+    sep = byte;
+    sepFreq = hist[byte];
+  }
+}
+
+let pageCount = Math.ceil(data.length / pageSize);
+for (let off = 0, pageIndex = 0; off < data.length; off += pageSize, pageIndex += 1) {
+  let page = data.subarray(off, off + pageSize);
+  // let escaped = [sep];
+  // for (let byte of page) {
+  //   if (byte === sep) escaped.push(sep, sep);
+  //   else escaped.push(byte);
+  // }
+  await fs.writeFile(
+    join(outdir, `data_${pageIndex}.p8`),
+    dataCartTemplate(page, pageIndex, pageCount)
+  );
+}
+
+await fs.writeFile(join(outdir, "play.p8"), playCartTemplate(pageCount));
+
+function dataCartTemplate(data, index, count) {
+  return `pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
---bad apple, but...
+--bad apple data cart
+base32 = "${toBase32(data)}"
+page = {}
+b, p = 0, 0
+for i = 1, #base32 do
+  local c = ord(base32, i)
+  if c >= 97 then
+    c -= 97
+  else
+    c -= 24
+  end
+  p += 5
+  if p >= 8 then
+    add(page, b >> 8)
+    p -= 8
+    b = b & ((1 << p) - 1)
+  end
+end
+page = chr(unpack(page))
+data = stat(4) .. page
+printh(data, "@clip")
+printh(#data)
+poke(0x8000, ${index + 1})
+${index + 1 < count ? `load("data_${index + 1}.p8")` : `load("play.p8")`}
+`;
+}
 
-function draw32(s)
-	local trits = {}
-	for i = 1, #s do
-		local v = 0
-		local c = ord(s, i)
-		if 97<=c and c<=122 then
-			v = c - 97
-		elseif 50<=c and c<=55 then
-			v = c - 24
-		else break end
-		add(trits, v \ 3)
-		add(trits, v % 3)
-	end
-	
-	local itrit = 1
-	function next_trit()
-		local b = trits[itrit]
-		itrit += 1
-		return b
-	end
-	
-	function rec(x0,y0,n)
-		local t = next_trit()
-		if t == 2 then
-			rec(x0,y0,n/2)
-			rec(x0+n/2,y0,n/2)
-			rec(x0,y0+n/2,n/2)
-			rec(x0+n/2,y0+n/2,n/2)
-			return
-		end
-		--debug wireframe
-		--if n >= 4 then
-		--	rect(x0,y0,x0+n-1,y0+n-1,11)
-		--end
-		color(t==1 and 7 or 0)
-		rectfill(x0,y0,x0+n-1,y0+n-1)
-	end
-	
-	cls()
-	rec(0,0,128)
+function playCartTemplate(pageCount) {
+  return `pico-8 cartridge // http://www.pico-8.com
+version 42
+__lua__
+--bad apple play cart
+
+function load_data()
+  local i = peek(0x8000)
+  if i == 0 then
+    load("data_0.p8")
+  end
+  poke(0x8000, 0)
+  data=split(stat(4),${pageSize},false)
+end
+
+page,pagei = {},0
+datap,datai = 0,0
+function next_bit()
+  if datap == 0 then
+    if datai == #page then
+      if pagei == #data then
+        return 0
+      end
+      pagei += 1
+      page = data[pagei]
+      datai = 0
+    end
+    datai += 1
+    datap = 7
+  end
+  local byte = ord(page, datai)
+  local bit = byte & (1 << datap)
+  datap -= 1
+  printh(bit)
+  return bit
+end
+
+function draw_frame()
+  local c = 7
+
+  function rec(x0,y0,n,d)
+    local l = false
+    if d >= maxdepth then
+      l = true
+      c = next_bit()==0 and 0 or 7
+    elseif next_bit() == 0 then
+      l = true
+    elseif next_bit() == 0 then
+      l = true
+      if c==7 then c=0 else c=7 end
+    else
+      l = false
+    end
+
+    if l then
+      rectfill(x0,y0,x0+n-1,y0+n-1,c)
+      if debug and n>=4 then
+        rect(x0,y0,x0+n-1,y0+n-1,11)
+      end
+    else
+      rec(x0,y0,n/2,d+1)
+      rec(x0+n/2,y0,n/2,d+1)
+      rec(x0,y0+n/2,n/2,d+1)
+      rec(x0+n/2,y0+n/2,n/2,d+1)
+    end
+  end
+
+  cls()
+  rec(0,-16,128,0)
 end
 -->8
---[[frames]]--
--->8
-iframe = 1
-tframe = 0
+debug = false
+timer = 0
+framestep = 2
+maxdepth = 7
 
 function _init()
-	cls()
-	music(0)
+  load_data()
+  cls()
 end
 
 function _update()
-	tframe += 1
-	while tframe >= framestep do
-		tframe -= framestep
-		iframe += 1
-		if iframe > #frames then
-			iframe = loopstartframe
-		end
-	end
-	draw32(frames[iframe])
+  if btnp(5) then
+    debug = not debug
+  end
+  if (not btn(0)) timer += 1
+  if (btn(1)) timer = framestep
+  while timer >= framestep do
+    timer -= framestep
+    draw_frame()
+  end
 end
 
-__gfx__
 __label__
 77777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777
 77777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777
@@ -197,11 +307,27 @@ __label__
 77777777777777777777777777777777777777777777000000000000000000000000000000000000000000000000000777777777777777777777777777777777
 77777777777777777777777777777777777777777770000000000000000000000000000000000000000000000000000777777777777777777777777777777777
 77777777777777777777777777777777777777777770000000000000000000000000000000000000000000000000000777777777777777777777777777777777
+`;
+}
 
-__sfx__
-010600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-010d002000173001003c6150010000173001003c6150000000173000003c615000000017300173001730017300173000003c6150000000173000003c6150000000173000003c6150000000173000000017300000
-__music__
-00 00424344
-03 01424344
-
+function toBase32(data) {
+  let encoded = [];
+  let p = 0;
+  let buf = 0;
+  for (let byte of data) {
+    buf = (buf << 8) | byte;
+    p += 8;
+    while (p >= 5) {
+      p -= 5;
+      let c = buf >> p;
+      buf ^= c << p;
+      if (c <= 25) encoded.push(97 + c);
+      else encoded.push(24 + c);
+    }
+  }
+  if (buf <= 25) encoded.push(97 + buf);
+  else encoded.push(24 + buf);
+  // for (let i = 0; i < 5 - p; i++) encoded.push(61);
+  // return Buffer.from(encoded);
+  return String.fromCharCode(...encoded);
+}

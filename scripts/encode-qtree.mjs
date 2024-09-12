@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createWriteStream } from "node:fs";
 import * as fs from "node:fs/promises";
 import { stdout } from "node:process";
 import { parseArgs } from "node:util";
@@ -8,9 +9,10 @@ const args = parseArgs({
   strict: true,
   options: {
     maxDepth: { type: "string", default: "7" },
-    frameStep: { type: "string" },
-    startFrame: { type: "string" },
-    endFrame: { type: "string" },
+    frameStep: { type: "string", default: "2" },
+    startFrame: { type: "string", default: "1" },
+    endFrame: { type: "string", default: "6562" },
+    output: { type: "string" },
   },
 });
 
@@ -18,6 +20,7 @@ const maxDepth = Number(args.values.maxDepth);
 const startFrame = Number(args.values.startFrame);
 const endFrame = Number(args.values.endFrame);
 const frameStep = Number(args.values.frameStep);
+const output = args.values.output ? createWriteStream(args.values.output) : stdout;
 
 class BitStream {
   constructor() {
@@ -47,18 +50,14 @@ class BitStream {
 
 let stream = new BitStream();
 
-for (
-  let frameIndex = startFrame;
-  frameIndex <= endFrame;
-  frameIndex += frameStep
-) {
+for (let frameIndex = startFrame; frameIndex <= endFrame; frameIndex += frameStep) {
   let i = Math.round(frameIndex).toString().padStart(3, "0");
   let framePath = `./data/frames/bad_apple_${i}.png.bin`;
   await encodeFrame(framePath, maxDepth, stream);
 }
 
 stream.flushByte();
-stdout.write(stream.toBuffer());
+output.write(stream.toBuffer());
 
 async function encodeFrame(inPath, maxDepth, stream) {
   let input = await fs.readFile(inPath);
@@ -87,34 +86,24 @@ async function encodeFrame(inPath, maxDepth, stream) {
     trees = newTrees;
   }
 
-  let ch = [2, 0, 1];
+  let cc = 1;
   function serialize(tree, depth = 0) {
-    let c = Math.round(tree.v);
     if (depth >= maxDepth) {
+      let c = Math.round(tree.v);
       stream.pushBit(c);
-      return;
-    }
-
-    if (tree.c) c = 2;
-
-    let i = ch.indexOf(c);
-    if (i === 0) {
-      stream.pushBit(0);
-    } else {
-      stream.pushBit(1);
-      if (i === 1) {
+      cc = c;
+    } else if (!tree.c) {
+      let c = Math.round(tree.v);
+      if (c === cc) {
         stream.pushBit(0);
-        ch[1] = ch[0];
-        ch[0] = c;
       } else {
         stream.pushBit(1);
-        ch[2] = ch[1];
-        ch[1] = ch[0];
-        ch[0] = c;
+        stream.pushBit(0);
+        cc = c;
       }
-    }
-
-    if (c === 2) {
+    } else {
+      stream.pushBit(1);
+      stream.pushBit(1);
       for (let c of tree.c) serialize(c, depth + 1);
     }
   }
