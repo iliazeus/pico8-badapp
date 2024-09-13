@@ -3,7 +3,7 @@
 import * as fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import { stdin } from "node:process";
-import { format, parseArgs } from "node:util";
+import { parseArgs } from "node:util";
 import assert from "node:assert";
 import { join } from "node:path";
 
@@ -20,39 +20,37 @@ const input = args.values.input ? createReadStream(args.values.input) : stdin;
 const outdir = args.values.outdir;
 const pageSize = Number(args.values.pageSize);
 
+const ESC = 1;
+const SEP = 2;
+const ESC_ESC = [ESC, ESC];
+const ESC_NUL = [ESC, 3];
+const ESC_CR = [ESC, 4];
+const ESC_SEP = [ESC, 5];
+
 assert(outdir);
 
 let data = [];
 for await (let chunk of input) data.push(chunk);
 data = Buffer.concat(data);
 
-let hist = new Int32Array(256);
-for (let byte of data) hist[byte]++;
-
-let sep = 0x00;
-let sepFreq = 0;
-for (let byte = 0; byte < 256; byte++) {
-  if (hist[byte] > sepFreq) {
-    sep = byte;
-    sepFreq = hist[byte];
-  }
-}
-
 let pageCount = Math.ceil(data.length / pageSize);
 for (let off = 0, pageIndex = 0; off < data.length; off += pageSize, pageIndex += 1) {
   let page = data.subarray(off, off + pageSize);
-  // let escaped = [sep];
-  // for (let byte of page) {
-  //   if (byte === sep) escaped.push(sep, sep);
-  //   else escaped.push(byte);
-  // }
+  let escaped = [];
+  for (let byte of page) {
+    if (byte === ESC) escaped.push(...ESC_ESC);
+    else if (byte === 0) escaped.push(...ESC_NUL);
+    else if (byte == 13) escaped.push(...ESC_CR);
+    else if (byte === SEP) escaped.push(...ESC_SEP);
+    else escaped.push(byte);
+  }
   await fs.writeFile(
     join(outdir, `data_${pageIndex}.p8`),
-    dataCartTemplate(page, pageIndex, pageCount)
+    dataCartTemplate(escaped, pageIndex, pageCount)
   );
 }
 
-await fs.writeFile(join(outdir, "play.p8"), playCartTemplate(pageCount));
+await fs.writeFile(join(outdir, "play.p8"), playCartTemplate());
 
 function dataCartTemplate(data, index, count) {
   return `pico-8 cartridge // http://www.pico-8.com
@@ -69,23 +67,23 @@ for i = 1, #base32 do
   else
     c -= 24
   end
+  b = (b << 5) | c
   p += 5
   if p >= 8 then
-    add(page, b >> 8)
     p -= 8
-    b = b & ((1 << p) - 1)
+    local d = (b >> p) & 0xff
+    add(page, d)
+    b = b ^^ (d << p)
   end
 end
 page = chr(unpack(page))
-data = stat(4) .. page
-printh(data, "@clip")
-printh(#data)
+data = ${index == 0 ? "page" : `stat(4) .. chr(${SEP}) .. page`}
 poke(0x8000, ${index + 1})
 ${index + 1 < count ? `load("data_${index + 1}.p8")` : `load("play.p8")`}
 `;
 }
 
-function playCartTemplate(pageCount) {
+function playCartTemplate() {
   return `pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
@@ -96,12 +94,13 @@ function load_data()
   if i == 0 then
     load("data_0.p8")
   end
+  data = stat(4)
   poke(0x8000, 0)
-  data=split(stat(4),${pageSize},false)
+  data=split(data,chr(${SEP}),false)
 end
 
 page,pagei = {},0
-datap,datai = 0,0
+datac,datap,datai = 0,0,0
 function next_bit()
   if datap == 0 then
     if datai == #page then
@@ -113,12 +112,24 @@ function next_bit()
       datai = 0
     end
     datai += 1
-    datap = 7
+    datac = ord(page,datai)
+    if datac==${ESC} then
+      datai += 1
+      datac = ord(page,datai)
+      if datac==${ESC_ESC[1]} then
+        datac = ${ESC}
+      elseif datac==${ESC_NUL[1]} then
+        datac = 0
+      elseif datac==${ESC_CR[1]} then
+        datac = 13
+      elseif datac==${ESC_SEP[1]} then
+        datac = ${SEP}
+      end
+    end
+    datap = 8
   end
-  local byte = ord(page, datai)
-  local bit = byte & (1 << datap)
   datap -= 1
-  printh(bit)
+  local bit = (datac & (1 << datap)) >> datap
   return bit
 end
 
@@ -325,9 +336,10 @@ function toBase32(data) {
       else encoded.push(24 + c);
     }
   }
-  if (buf <= 25) encoded.push(97 + buf);
-  else encoded.push(24 + buf);
-  // for (let i = 0; i < 5 - p; i++) encoded.push(61);
-  // return Buffer.from(encoded);
+  if (p > 0) {
+    buf <<= 5 - p;
+    if (buf <= 25) encoded.push(97 + buf);
+    else encoded.push(24 + buf);
+  }
   return String.fromCharCode(...encoded);
 }

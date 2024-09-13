@@ -1,6 +1,9 @@
 all: ./build/carts
 clean: clean-build
 
+export: ./build/carts
+	cd ./build/carts; for f in *.p8; do pico8 -export $$f.png $$f; done
+
 ./build/carts: ./scripts/build-carts.mjs ./build/qtree.bin
 	mkdir -p ./build/carts-tmp
 	./scripts/build-carts.mjs --input ./build/qtree.bin --outdir ./build/carts-tmp
@@ -8,7 +11,7 @@ clean: clean-build
 	mv -T ./build/carts-tmp ./build/carts
 
 ./build/qtree.bin: ./scripts/encode-qtree.mjs ./data/frames
-	./scripts/encode-qtree.mjs --output ./build/qtree.bin --endFrame 500
+	./scripts/encode-qtree.mjs --output ./build/qtree.bin
 
 ./data/frames: ./data/image_sequence
 	mkdir -p ./data/frames-tmp
