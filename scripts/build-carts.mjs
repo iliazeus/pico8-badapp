@@ -77,8 +77,11 @@ function toBase32(data) {
 
 function dataCartTemplate(data, index, count) {
   const banner = `
-loading data carts...
-this might take a while
+
+
+
+    loading data carts...
+    this might take a while
 
 
 
@@ -89,12 +92,16 @@ this might take a while
 
 
 
-bad apple!! - pico-8 version
+  bad apple!! - pico-8 version
 
-by @iliazeus
+        by @iliazeus
+    with enormous help of
+      @realshadowcaster
 
-with enormous help of
-@realshadowcaster
+    source code available at
+github.com/iliazeus/pico8-badapple
+
+        (it's ugly tho)
 `
     .split("\n")
     .map((s) => JSON.stringify(s));
@@ -144,6 +151,7 @@ function load_data()
   end
   data = stat(4)
   poke(0x8000, 0)
+  printh("","@clip")
   data=split(data,chr(${SEP}),false)
 end
 
@@ -219,7 +227,7 @@ end
 -->8
 debug = false
 timer = 0
-framestep = 3
+framestep = 2
 maxdepth = 7
 
 function _init()
