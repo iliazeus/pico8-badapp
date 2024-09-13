@@ -9,8 +9,8 @@ const args = parseArgs({
   strict: true,
   options: {
     maxDepth: { type: "string", default: "7" },
-    frameStep: { type: "string", default: "2" },
-    startFrame: { type: "string", default: "1" },
+    framesPerBeat: { type: "string", default: "4" },
+    startFrame: { type: "string", default: "20" },
     endFrame: { type: "string", default: "6562" },
     output: { type: "string" },
   },
@@ -19,8 +19,10 @@ const args = parseArgs({
 const maxDepth = Number(args.values.maxDepth);
 const startFrame = Number(args.values.startFrame);
 const endFrame = Number(args.values.endFrame);
-const frameStep = Number(args.values.frameStep);
+const framesPerBeat = Number(args.values.framesPerBeat);
 const output = args.values.output ? createWriteStream(args.values.output) : stdout;
+
+const frameStep = (60 * 30) / (138 * framesPerBeat);
 
 class BitStream {
   constructor() {
