@@ -57,6 +57,7 @@ function dataCartTemplate(data, index, count) {
 version 42
 __lua__
 --bad apple data cart
+print("loading data cart ${index + 1} of ${count}")
 base32 = "${toBase32(data)}"
 page = {}
 b, p = 0, 0
