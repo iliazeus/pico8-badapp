@@ -13,12 +13,17 @@ const args = parseArgs({
     input: { type: "string" },
     outdir: { type: "string" },
     pageSize: { type: "string", default: "13310" },
+    bbsName: { type: "string" },
+    bbsVersion: { type: "string", default: "1" },
   },
 });
 
 const input = args.values.input ? createReadStream(args.values.input) : stdin;
 const outdir = args.values.outdir;
 const pageSize = Number(args.values.pageSize);
+
+const bbsName = args.values.bbsName;
+const bbsVersion = Number(args.values.bbsVersion);
 
 const ESC = 1;
 const SEP = 2;
@@ -37,6 +42,7 @@ let pageCount = Math.ceil(data.length / pageSize);
 for (let off = 0, pageIndex = 0; off < data.length; off += pageSize, pageIndex += 1) {
   let page = data.subarray(off, off + pageSize);
   let escaped = [];
+
   for (let byte of page) {
     if (byte === ESC) escaped.push(...ESC_ESC);
     else if (byte === 0) escaped.push(...ESC_NUL);
@@ -44,13 +50,21 @@ for (let off = 0, pageIndex = 0; off < data.length; off += pageSize, pageIndex +
     else if (byte === SEP) escaped.push(...ESC_SEP);
     else escaped.push(byte);
   }
+
+  let nextCartName = bbsName
+    ? `#${bbsName}-${bbsVersion + pageIndex + 1}`
+    : pageIndex + 1 < pageCount
+    ? `data_${pageIndex + 1}.p8`
+    : "play.p8";
+
   await fs.writeFile(
     join(outdir, `data_${pageIndex}.p8`),
-    dataCartTemplate(escaped, pageIndex, pageCount)
+    dataCartTemplate(escaped, pageIndex, nextCartName)
   );
 }
 
-await fs.writeFile(join(outdir, "play.p8"), playCartTemplate());
+let firstDataCartName = bbsName ? `#${bbsName}-${bbsVersion}` : "data_0.p8";
+await fs.writeFile(join(outdir, "play.p8"), playCartTemplate(firstDataCartName));
 
 function toBase32(data) {
   let encoded = [];
@@ -75,7 +89,7 @@ function toBase32(data) {
   return String.fromCharCode(...encoded);
 }
 
-function dataCartTemplate(data, index, count) {
+function dataCartTemplate(data, index, nextCart) {
   const banner = `
 
 
@@ -134,11 +148,11 @@ page = chr(unpack(page))
 data = ${index == 0 ? "page" : `stat(4) .. chr(${SEP}) .. page`}
 printh(data, "@clip")
 poke(0x8000, ${index + 1})
-${index + 1 < count ? `load("data_${index + 1}.p8")` : `load("play.p8")`}
+load("${nextCart}")
 `;
 }
 
-function playCartTemplate() {
+function playCartTemplate(firstDataCart) {
   return `pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
@@ -147,7 +161,7 @@ __lua__
 function load_data()
   local i = peek(0x8000)
   if i == 0 then
-    load("data_0.p8")
+    load("${firstDataCart}")
   end
   data = stat(4)
   poke(0x8000, 0)

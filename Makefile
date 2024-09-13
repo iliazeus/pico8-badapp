@@ -1,8 +1,15 @@
 all: ./build/carts
 clean: clean-build
 
-export: ./build/carts
-	cd ./build/carts; for f in *.p8; do pico8 -export $$f.png $$f; done
+BBS_NAME=iliazeus_badapple
+BBS_VERSION=1
+bbs: ./scripts/build-carts.mjs ./build/qtree.bin
+	mkdir -p ./build/carts-tmp
+	./scripts/build-carts.mjs --bbsName ${BBS_NAME} --bbsVersion ${BBS_VERSION} --input ./build/qtree.bin --outdir ./build/carts-tmp
+	cd ./build/carts-tmp; for f in *.p8; do pico8 -export $$f.png $$f; done
+	rm ./build/carts-tmp/*.p8
+	rm -rf ./build/carts
+	mv -T ./build/carts-tmp ./build/carts
 
 ./build/carts: ./scripts/build-carts.mjs ./build/qtree.bin
 	mkdir -p ./build/carts-tmp
