@@ -1,4 +1,4 @@
-all: ./build/carts
+all: ./build/carts.zip
 clean: clean-build
 
 BBS_NAME=iliazeus_badapple
@@ -10,6 +10,9 @@ bbs: ./scripts/build-carts.mjs ./build/qtree.bin
 	rm ./build/carts-tmp/*.p8
 	rm -rf ./build/carts
 	mv -T ./build/carts-tmp ./build/carts
+
+./build/carts.zip: ./build/carts
+	cd ./build/carts && zip -r ../carts.zip ./*
 
 ./build/carts: ./scripts/build-carts.mjs ./build/qtree.bin
 	mkdir -p ./build/carts-tmp

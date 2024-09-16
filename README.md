@@ -8,7 +8,7 @@ Click the image to watch the results on YouTube:
 
 Discuss it [on the Pico-8 forum](https://www.lexaloffle.com/bbs/?tid=143010).
 
-## Prerequisites
+## Build prerequisites
 
 - GNU Make (other flavors of `make` might work too)
 - [aria2](https://aria2.github.io/) - for downloading the Bad Apple source video
