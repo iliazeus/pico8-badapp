@@ -12,7 +12,7 @@ bbs: ./scripts/build-carts.mjs ./build/qtree.bin
 	mv -T ./build/carts-tmp ./build/carts
 
 ./build/carts.zip: ./build/carts
-	cd ./build/carts && zip -r ../carts.zip ./*
+	cd ./build/carts && rm -f ../carts.zip && zip -r ../carts.zip ./*
 
 ./build/carts: ./scripts/build-carts.mjs ./build/qtree.bin
 	mkdir -p ./build/carts-tmp
